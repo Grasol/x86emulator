@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 
   while (true) {
     cpu_update(emulator.cpu);
-    printf("EIP: %x, EAX: %x, ECX: %x\n", emulator.cpu->eip, emulator.cpu->gpr[EAX], emulator.cpu->gpr[ECX]);
+    printf("EIP: %x, EAX: %x, ECX: %x EFLAGS: %x\n", emulator.cpu->eip, emulator.cpu->gpr[EAX], emulator.cpu->gpr[ECX], emulator.cpu->eflags);
   }
 
 

@@ -309,6 +309,11 @@ typedef struct CPUx86 CPUx86;
 #define EFLAGS_ADJUST_FLAG               0x00000010
 #define EFLAGS_PARITY_FLAG               0x00000004
 #define EFLAGS_CARRY_FLAG                0x00000001
+#define EFLAGS_STATUS_FLAGS              0x000008d5
+#define UPDATE_EFLAGS(v, f) \
+cpu->eflags &= ~f; \
+cpu->eflags |= (v & f) | 0x2; 
+
 
 #define CR0_PAGING              0x80000000
 #define CR0_CACHE_DISABLE       0x40000000

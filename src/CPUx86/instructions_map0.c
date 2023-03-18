@@ -1,26 +1,417 @@
 #include "instructions_map0.h"
 
+uint32_t PARITY_TAB[8] = {
+  0x69969669,
+  0x96696996,
+  0x96696996,
+  0x69969669,
+  0x96696996,
+  0x69969669,
+  0x69969669,
+  0x96696996
+  /*0x69969660,
+0x96696991,
+0x96696992,
+0x69969663,
+0x96696994,
+0x69969665,
+0x69969666,
+0x96696997*/
+};
+
+
+
+
+
+
+
+
+
 void call_instruction_map0(CPUx86 *cpu) {
   Decoder *decoder = cpu->decoder;
   bool arg_size = decoder->arg_size == DWORD; 
-  printf("CALL: %x %i", decoder->opcode, arg_size);
+  printf("CALL: %x %i\n", decoder->opcode, arg_size);
 
   switch (decoder->opcode) {
+    case 0x00: x86_00_ADD_B(cpu); break;
+    case 0x01: arg_size ? x86_01_ADD_D(cpu) : x86_01_ADD_W(cpu); break;
+    case 0x02: x86_02_ADD_B(cpu); break;
+    case 0x03: arg_size ? x86_03_ADD_D(cpu) : x86_03_ADD_W(cpu); break;
+    case 0x04: x86_04_ADD_B(cpu); break;
+    case 0x05: arg_size ? x86_05_ADD_D(cpu) : x86_05_ADD_W(cpu); break;
+
+    case 0x10: x86_10_ADC_B(cpu); break;
+    case 0x11: arg_size ? x86_11_ADC_D(cpu) : x86_11_ADC_W(cpu); break;
+    case 0x12: x86_12_ADC_B(cpu); break;
+    case 0x13: arg_size ? x86_13_ADC_D(cpu) : x86_13_ADC_W(cpu); break;
+    case 0x14: x86_14_ADC_B(cpu); break;
+    case 0x15: arg_size ? x86_15_ADC_D(cpu) : x86_15_ADC_W(cpu); break;
+
     case 0x86: x86_86_XCHG_B(cpu); break;
     case 0x87: arg_size ? x86_87_XCHG_D(cpu) : x86_87_XCHG_W(cpu); break;
     case 0x88: x86_88_MOV_B(cpu); break;
     case 0x89: arg_size ? x86_89_MOV_D(cpu) : x86_89_MOV_W(cpu); break;
     case 0x8a: x86_8A_MOV_B(cpu); break;
     case 0x8b: arg_size ? x86_8B_MOV_D(cpu) : x86_8B_MOV_W(cpu); break;
+
     case 0x90: arg_size ? x86_90_XCHG_D(cpu) : x86_90_XCHG_W(cpu); break;
+
     case 0xb0: x86_B0_MOV_B(cpu); break;
     case 0xb8: arg_size ? x86_B8_MOV_D(cpu) : x86_B8_MOV_W(cpu); break;
+
     case 0xe9: arg_size ? x86_E9_NEAR_JMP_REL32(cpu) : x86_E9_NEAR_JMP_REL16(cpu); break;
     case 0xeb: x86_EB_SHORT_JMP_REL8(cpu); break;
   }
 
   return;
 }
+
+
+uint32_t generate_flags_add_byte(uint16_t src1, uint16_t src2, uint16_t res) {
+  uint32_t res_flags = 0;
+
+  res_flags |= CONDITIONAL_FLAG(res & 0x100, EFLAGS_CARRY_FLAG);
+  res_flags |= CONDITIONAL_FLAG(res & 0x80, EFLAGS_SIGN_FLAG);
+  res_flags |= CONDITIONAL_FLAG((res & 0xff) == 0, EFLAGS_ZERO_FLAG);
+  res_flags |= CONDITIONAL_FLAG(PARITY(res & 0xff), EFLAGS_PARITY_FLAG);
+  uint16_t carry_chain = CARRY_CHAIN(src1, src2, res);
+  res_flags |= CONDITIONAL_FLAG(XOR2(carry_chain >> 6), EFLAGS_OVERFLOW_FLAG);
+  res_flags |= CONDITIONAL_FLAG(carry_chain & 0x8, EFLAGS_ADJUST_FLAG);
+
+  return res_flags;
+}
+
+uint32_t generate_flags_add_word(uint32_t src1, uint32_t src2, uint32_t res) {
+  uint32_t res_flags = 0;
+
+  res_flags |= CONDITIONAL_FLAG(res & 0x10000, EFLAGS_CARRY_FLAG);
+  res_flags |= CONDITIONAL_FLAG(res & 0x8000, EFLAGS_SIGN_FLAG);
+  res_flags |= CONDITIONAL_FLAG((res & 0xffff) == 0, EFLAGS_ZERO_FLAG);
+  res_flags |= CONDITIONAL_FLAG(PARITY(res & 0xff), EFLAGS_PARITY_FLAG);
+  uint32_t carry_chain = CARRY_CHAIN(src1, src2, res);
+  res_flags |= CONDITIONAL_FLAG(XOR2(carry_chain >> 14), EFLAGS_OVERFLOW_FLAG);
+  res_flags |= CONDITIONAL_FLAG(carry_chain & 0x8, EFLAGS_ADJUST_FLAG);
+
+  return res_flags;
+}
+
+uint32_t generate_flags_add_dword(uint64_t src1, uint64_t src2, uint64_t res) {
+  uint32_t res_flags = 0;
+
+  res_flags |= CONDITIONAL_FLAG(res & 0x100000000, EFLAGS_CARRY_FLAG);
+  res_flags |= CONDITIONAL_FLAG(res & 0x80000000, EFLAGS_SIGN_FLAG);
+  res_flags |= CONDITIONAL_FLAG((res & 0xffffffff) == 0, EFLAGS_ZERO_FLAG);
+  res_flags |= CONDITIONAL_FLAG(PARITY(res & 0xff), EFLAGS_PARITY_FLAG);
+  uint64_t carry_chain = CARRY_CHAIN(src1, src2, res);
+  res_flags |= CONDITIONAL_FLAG(XOR2(carry_chain >> 30), EFLAGS_OVERFLOW_FLAG);
+  res_flags |= CONDITIONAL_FLAG(carry_chain & 0x8, EFLAGS_ADJUST_FLAG);
+
+  return res_flags;
+}
+
+
+/* 00: ADD byte r/m, r8 */
+void x86_00_ADD_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_rm(cpu, BYTE);
+  uint16_t src2 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint16_t res = src1 + src2;
+  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  
+  uint32_t res_flags = generate_flags_add_byte(src1, src2, res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 01: ADD word r/m, r16 */
+void x86_01_ADD_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_rm(cpu, WORD);
+  uint32_t src2 = load_gpr(cpu, decoder->nnn, WORD);
+  uint32_t res = src1 + src2;
+  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  
+  uint32_t res_flags = generate_flags_add_word(src1, src2, res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 01: ADD dword r/m, r32 */
+void x86_01_ADD_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint64_t src1 = load_rm(cpu, DWORD);
+  uint64_t src2 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint64_t res = src1 + src2;
+  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  
+  uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 02: ADD r8, byte r/m */
+void x86_02_ADD_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint16_t src2 = load_rm(cpu, BYTE);
+  uint16_t res = src1 + src2;
+  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  
+  uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 03: ADD r16, word r/m */
+void x86_03_ADD_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint32_t src2 = load_rm(cpu, WORD);
+  uint32_t res = src1 + src2;
+  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  
+  uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 03: ADD r32, dword r/m */
+void x86_03_ADD_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint64_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint64_t src2 = load_rm(cpu, DWORD);
+  uint64_t res = src1 + src2;
+  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  
+  uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 04: ADD al, i8 */
+void x86_04_ADD_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, BYTE); 
+
+  uint16_t src1 = load_gpr(cpu, AL, BYTE);
+  uint16_t src2 = decoder->imm;
+  uint16_t res = src1 + src2;
+  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  
+  uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 05: ADD ax, i16 */
+void x86_05_ADD_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, WORD); 
+
+  uint32_t src1 = load_gpr(cpu, AX, WORD);
+  uint32_t src2 = decoder->imm;
+  uint32_t res = src1 + src2;
+  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  
+  uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 05: ADD eax, i32 */
+void x86_05_ADD_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, DWORD); 
+
+  uint64_t src1 = load_gpr(cpu, EAX, DWORD);
+  uint64_t src2 = decoder->imm;
+  uint64_t res = src1 + src2;
+  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  
+  uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 10: ADC byte r/m, r8 */
+void x86_10_ADC_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_rm(cpu, BYTE);
+  uint16_t src2 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint16_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint16_t res = src1 + src2 + carry_in;
+  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  
+  uint32_t res_flags = generate_flags_add_byte(src1, src2, res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 11: ADC word r/m, r16 */
+void x86_11_ADC_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_rm(cpu, WORD);
+  uint32_t src2 = load_gpr(cpu, decoder->nnn, WORD);
+  uint32_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint32_t res = src1 + src2 + carry_in;
+  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  
+  uint32_t res_flags = generate_flags_add_word(src1, src2, res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 11: ADC dword r/m, r32 */
+void x86_11_ADC_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint64_t src1 = load_rm(cpu, DWORD);
+  uint64_t src2 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint64_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint64_t res = src1 + src2 + carry_in;
+  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  
+  uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 12: ADC r8, byte r/m */
+void x86_12_ADC_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint16_t src2 = load_rm(cpu, BYTE);
+  uint16_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint16_t res = src1 + src2 + carry_in;
+  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  
+  uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 13: ADC r16, word r/m */
+void x86_13_ADC_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint32_t src2 = load_rm(cpu, WORD);
+  uint32_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint32_t res = src1 + src2 + carry_in;
+  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  
+  uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 13: ADC r32, dword r/m */
+void x86_13_ADC_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint64_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint64_t src2 = load_rm(cpu, DWORD);
+  uint64_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint64_t res = src1 + src2 + carry_in;
+  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  
+  uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 14: ADC al, i8 */
+void x86_14_ADC_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, BYTE); 
+
+  uint16_t src1 = load_gpr(cpu, AL, BYTE);
+  uint16_t src2 = decoder->imm;
+  uint16_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint16_t res = src1 + src2 + carry_in;
+  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  
+  uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 15: ADC ax, i16 */
+void x86_15_ADC_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, WORD); 
+
+  uint32_t src1 = load_gpr(cpu, AX, WORD);
+  uint32_t src2 = decoder->imm;
+  uint32_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint32_t res = src1 + src2 + carry_in;
+  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  
+  uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 15: ADC eax, i32 */
+void x86_15_ADC_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, DWORD); 
+
+  uint64_t src1 = load_gpr(cpu, EAX, DWORD);
+  uint64_t src2 = decoder->imm;
+  uint64_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
+  uint64_t res = src1 + src2 + carry_in;
+  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  
+  uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+
+
+
+
+
 
 
 /* 86: XCHG byte r/m, r8 */
