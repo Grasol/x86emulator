@@ -1,0 +1,5 @@
+memory_size auto
+
+map
+0x000ffff0 auto test.bin
+end
