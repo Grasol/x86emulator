@@ -109,6 +109,37 @@ uint32_t generate_flags_add_dword(uint64_t src1, uint64_t src2, uint64_t res) {
   return res_flags;
 }
 
+uint32_t generate_flags_bitlogic_byte(uint8_t res) {
+  uint32_t res_flags = 0;
+
+  res_flags |= CONDITIONAL_FLAG(res & 0x80, EFLAGS_SIGN_FLAG);
+  res_flags |= CONDITIONAL_FLAG((res == 0, EFLAGS_ZERO_FLAG);
+  res_flags |= CONDITIONAL_FLAG(PARITY(res), EFLAGS_PARITY_FLAG);
+
+  return res_flags;
+}
+
+uint32_t generate_flags_bitlogic_word(uint16_t res) {
+  uint32_t res_flags = 0;
+
+  res_flags |= CONDITIONAL_FLAG(res & 0x8000, EFLAGS_SIGN_FLAG);
+  res_flags |= CONDITIONAL_FLAG((res == 0, EFLAGS_ZERO_FLAG);
+  res_flags |= CONDITIONAL_FLAG(PARITY(res), EFLAGS_PARITY_FLAG);
+
+  return res_flags;
+}
+
+uint32_t generate_flags_bitlogic_dword(uint32_t res) {
+  uint32_t res_flags = 0;
+
+  res_flags |= CONDITIONAL_FLAG(res & 0x80000000, EFLAGS_SIGN_FLAG);
+  res_flags |= CONDITIONAL_FLAG((res == 0, EFLAGS_ZERO_FLAG);
+  res_flags |= CONDITIONAL_FLAG(PARITY(res), EFLAGS_PARITY_FLAG);
+
+  return res_flags;
+}
+
+
 
 /* 00: ADD byte r/m, r8 */
 void x86_00_ADD_B(CPUx86 *cpu) {
@@ -166,7 +197,7 @@ void x86_02_ADD_B(CPUx86 *cpu) {
   uint16_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
   uint16_t src2 = load_rm(cpu, BYTE);
   uint16_t res = src1 + src2;
-  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  store_gpr(cpu, decoder->nnn, BYTE, (uint8_t)(res & 0xff));
   
   uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -182,7 +213,7 @@ void x86_03_ADD_W(CPUx86 *cpu) {
   uint32_t src1 = load_gpr(cpu, decoder->nnn, WORD);
   uint32_t src2 = load_rm(cpu, WORD);
   uint32_t res = src1 + src2;
-  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  store_gpr(cpu, decoder->nnn, WORD, (uint16_t)(res & 0xffff));
   
   uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -198,7 +229,7 @@ void x86_03_ADD_D(CPUx86 *cpu) {
   uint64_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
   uint64_t src2 = load_rm(cpu, DWORD);
   uint64_t res = src1 + src2;
-  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  store_gpr(cpu, decoder->nnn, DWORD, (uint32_t)(res & 0xffffffff));
   
   uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -214,7 +245,7 @@ void x86_04_ADD_B(CPUx86 *cpu) {
   uint16_t src1 = load_gpr(cpu, AL, BYTE);
   uint16_t src2 = decoder->imm;
   uint16_t res = src1 + src2;
-  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  store_gpr(cpu, AL, BYTE, (uint8_t)(res & 0xff));
   
   uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -230,7 +261,7 @@ void x86_05_ADD_W(CPUx86 *cpu) {
   uint32_t src1 = load_gpr(cpu, AX, WORD);
   uint32_t src2 = decoder->imm;
   uint32_t res = src1 + src2;
-  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  store_gpr(cpu, AX, WORD, (uint16_t)(res & 0xffff));
   
   uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -246,13 +277,162 @@ void x86_05_ADD_D(CPUx86 *cpu) {
   uint64_t src1 = load_gpr(cpu, EAX, DWORD);
   uint64_t src2 = decoder->imm;
   uint64_t res = src1 + src2;
-  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  store_gpr(cpu, EAX, DWORD, (uint32_t)(res & 0xffffffff));
   
   uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
 
   return;
 }
+
+
+/* 08: OR byte r/m, r8 */
+void x86_38_OR_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint8_t src1 = load_rm(cpu, BYTE);
+  uint8_t src2 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t res = src1 | src2;
+  store_rm(cpu, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 09: OR word r/m, r16 */
+void x86_39_OR_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_rm(cpu, WORD);
+  uint16_t src2 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t res = src1 | src2;
+  store_rm(cpu, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 09: OR dword r/m, r32 */
+void x86_39_OR_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_rm(cpu, DWORD);
+  uint32_t src2 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t res = src1 | src2;
+  store_rm(cpu, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 0A: OR r8, byte r/m */
+void x86_3A_OR_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint8_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t src2 = load_rm(cpu, BYTE);
+  uint8_t res = src1 | src2;
+  store_gpr(cpu, decoder->nnn, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 0B: OR r16, word r/m */
+void x86_3B_OR_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t src2 = load_rm(cpu, WORD);
+  uint16_t res = src1 | src2;
+  store_gpr(cpu, decoder->nnn, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 0B: OR r32, dword r/m */
+void x86_3B_OR_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t src2 = load_rm(cpu, DWORD);
+  uint32_t res = src1 | src2;
+  store_gpr(cpu, decoder->nnn, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 0C: OR al, i8 */
+void x86_3C_OR_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, BYTE); 
+
+  uint8_t src1 = load_gpr(cpu, AL, BYTE);
+  uint8_t src2 = decoder->imm;
+  uint8_t res = src1 | src2;
+  store_gpr(cpu, AL, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 0D: OR ax, i16 */
+void x86_3D_OR_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, WORD); 
+
+  uint16_t src1 = load_gpr(cpu, AX, WORD);
+  uint16_t src2 = decoder->imm;
+  uint16_t res = src1 | src2;
+  store_gpr(cpu, AX, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 0D: OR eax, i32 */
+void x86_3D_OR_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, DWORD); 
+
+  uint32_t src1 = load_gpr(cpu, EAX, DWORD);
+  uint32_t src2 = decoder->imm;
+  uint32_t res = src1 | src2;
+  store_gpr(cpu, EAX, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+
+
+
 
 /* 10: ADC byte r/m, r8 */
 void x86_10_ADC_B(CPUx86 *cpu) {
@@ -270,6 +450,8 @@ void x86_10_ADC_B(CPUx86 *cpu) {
 
   return;
 }
+
+
  
 /* 11: ADC word r/m, r16 */
 void x86_11_ADC_W(CPUx86 *cpu) {
@@ -314,7 +496,7 @@ void x86_12_ADC_B(CPUx86 *cpu) {
   uint16_t src2 = load_rm(cpu, BYTE);
   uint16_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
   uint16_t res = src1 + src2 + carry_in;
-  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  store_gpr(cpu, decoder->nnn, BYTE, (uint8_t)(res & 0xff));
   
   uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -331,7 +513,7 @@ void x86_13_ADC_W(CPUx86 *cpu) {
   uint32_t src2 = load_rm(cpu, WORD);
   uint32_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
   uint32_t res = src1 + src2 + carry_in;
-  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  store_gpr(cpu, decoder->nnn, WORD, (uint16_t)(res & 0xffff));
   
   uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -348,7 +530,7 @@ void x86_13_ADC_D(CPUx86 *cpu) {
   uint64_t src2 = load_rm(cpu, DWORD);
   uint64_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
   uint64_t res = src1 + src2 + carry_in;
-  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  store_gpr(cpu, decoder->nnn, DWORD, (uint32_t)(res & 0xffffffff));
   
   uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -365,7 +547,7 @@ void x86_14_ADC_B(CPUx86 *cpu) {
   uint16_t src2 = decoder->imm;
   uint16_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
   uint16_t res = src1 + src2 + carry_in;
-  store_rm(cpu, BYTE, (uint8_t)(res & 0xff));
+  store_gpr(cpu, AL, BYTE, (uint8_t)(res & 0xff));
   
   uint32_t res_flags = generate_flags_add_byte(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -382,7 +564,7 @@ void x86_15_ADC_W(CPUx86 *cpu) {
   uint32_t src2 = decoder->imm;
   uint32_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
   uint32_t res = src1 + src2 + carry_in;
-  store_rm(cpu, WORD, (uint16_t)(res & 0xffff));
+  store_gpr(cpu, AX, WORD, (uint16_t)(res & 0xffff));
   
   uint32_t res_flags = generate_flags_add_word(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -399,7 +581,7 @@ void x86_15_ADC_D(CPUx86 *cpu) {
   uint64_t src2 = decoder->imm;
   uint64_t carry_in = cpu->eflags & EFLAGS_CARRY_FLAG;
   uint64_t res = src1 + src2 + carry_in;
-  store_rm(cpu, DWORD, (uint32_t)(res & 0xffffffff));
+  store_gpr(cpu, EAX, DWORD, (uint32_t)(res & 0xffffffff));
   
   uint32_t res_flags = generate_flags_add_dword(src1, src2, res); 
   UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
@@ -408,6 +590,296 @@ void x86_15_ADC_D(CPUx86 *cpu) {
 }
 
 
+
+/* 20: AND byte r/m, r8 */
+void x86_20_AND_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint8_t src1 = load_rm(cpu, BYTE);
+  uint8_t src2 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t res = src1 & src2;
+  store_rm(cpu, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 21: AND word r/m, r16 */
+void x86_21_AND_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_rm(cpu, WORD);
+  uint16_t src2 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t res = src1 & src2;
+  store_rm(cpu, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 21: AND dword r/m, r32 */
+void x86_21_AND_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_rm(cpu, DWORD);
+  uint32_t src2 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t res = src1 & src2;
+  store_rm(cpu, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 22: AND r8, byte r/m */
+void x86_22_AND_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint8_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t src2 = load_rm(cpu, BYTE);
+  uint8_t res = src1 & src2;
+  store_gpr(cpu, decoder->nnn, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 23: AND r16, word r/m */
+void x86_23_AND_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t src2 = load_rm(cpu, WORD);
+  uint16_t res = src1 & src2;
+  store_gpr(cpu, decoder->nnn, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 23: AND r32, dword r/m */
+void x86_23_AND_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t src2 = load_rm(cpu, DWORD);
+  uint32_t res = src1 & src2;
+  store_gpr(cpu, decoder->nnn, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 24: AND al, i8 */
+void x86_24_AND_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, BYTE); 
+
+  uint8_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t src2 = decoder->imm;
+  uint8_t res = src1 & src2;
+  store_gpr(cpu, AL, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 25: AND ax, i16 */
+void x86_25_AND_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, WORD); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t src2 = decoder->imm;
+  uint16_t res = src1 & src2;
+  store_gpr(cpu, AX, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 25: AND eax, i32 */
+void x86_25_AND_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, DWORD); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t src2 = decoder->imm;
+  uint32_t res = src1 & src2;
+  store_gpr(cpu, EAX, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+
+
+/* 30: XOR byte r/m, r8 */
+void x86_30_XOR_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint8_t src1 = load_rm(cpu, BYTE);
+  uint8_t src2 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t res = src1 ^ src2;
+  store_rm(cpu, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 31: XOR word r/m, r16 */
+void x86_31_XOR_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_rm(cpu, WORD);
+  uint16_t src2 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t res = src1 ^ src2;
+  store_rm(cpu, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 31: XOR dword r/m, r32 */
+void x86_31_XOR_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_rm(cpu, DWORD);
+  uint32_t src2 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t res = src1 ^ src2;
+  store_rm(cpu, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 32: XOR r8, byte r/m */
+void x86_32_XOR_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint8_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t src2 = load_rm(cpu, BYTE);
+  uint8_t res = src1 ^ src2;
+  store_gpr(cpu, decoder->nnn, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 33: XOR r16, word r/m */
+void x86_33_XOR_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t src2 = load_rm(cpu, WORD);
+  uint16_t res = src1 ^ src2;
+  store_gpr(cpu, decoder->nnn, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 33: XOR r32, dword r/m */
+void x86_33_XOR_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_modrm(cpu); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t src2 = load_rm(cpu, DWORD);
+  uint32_t res = src1 ^ src2;
+  store_gpr(cpu, decoder->nnn, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res); 
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 34: XOR al, i8 */
+void x86_34_XOR_B(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, BYTE); 
+
+  uint8_t src1 = load_gpr(cpu, decoder->nnn, BYTE);
+  uint8_t src2 = decoder->imm;
+  uint8_t res = src1 ^ src2;
+  store_gpr(cpu, AL, BYTE, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_byte(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+ 
+/* 35: XOR ax, i16 */
+void x86_35_XOR_W(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, WORD); 
+
+  uint16_t src1 = load_gpr(cpu, decoder->nnn, WORD);
+  uint16_t src2 = decoder->imm;
+  uint16_t res = src1 ^ src2;
+  store_gpr(cpu, AX, WORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_word(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
+
+/* 35: XOR eax, i32 */
+void x86_35_XOR_D(CPUx86 *cpu) {
+  Decoder *decoder = cpu->decoder;
+  decode_imm(cpu, DWORD); 
+
+  uint32_t src1 = load_gpr(cpu, decoder->nnn, DWORD);
+  uint32_t src2 = decoder->imm;
+  uint32_t res = src1 ^ src2;
+  store_gpr(cpu, EAX, DWORD, res);
+  
+  uint32_t res_flags = generate_flags_bitlogic_dword(res);
+  UPDATE_EFLAGS(res_flags, EFLAGS_STATUS_FLAGS);
+
+  return;
+}
 
 
 
