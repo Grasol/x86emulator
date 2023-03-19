@@ -1,5 +1,6 @@
 memory_size auto
 
 map
-0x000ffff0 auto test.bin
+0x000f0000 auto t2.bin
+0x000ffff0 auto t1.bin
 end

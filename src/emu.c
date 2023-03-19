@@ -49,11 +49,12 @@ int main(int argc, char **argv) {
     emulator.cpu->xmm[0].part[0], emulator.cpu->seg[CS].base_address, emulator.cpu->eip);
 
   //puts("3");
-  //printf("%i, %hx\n", bulid_memory_sz, PHYMEM_le_load_word(emulator.phy_mem, 1));
+  printf("%hx\n", PHYMEM_le_load_word(emulator.phy_mem, 0));
 
   while (true) {
     cpu_update(emulator.cpu);
     printf("EIP: %x, EAX: %x, ECX: %x EFLAGS: %x\n", emulator.cpu->eip, emulator.cpu->gpr[EAX], emulator.cpu->gpr[ECX], emulator.cpu->eflags);
+    getchar();
   }
 
 

@@ -353,6 +353,7 @@ void decode_opcode(CPUx86 *cpu) {
   if (opcbits != NULL_ARG) {
     uint8_t opc_mask = (0xff << (8 - opcbits) & 0xff);
     decoder->opc_arg = decoder->opcode & ~(opc_mask);
+    decoder->opcode &= opc_mask;
   }
 
   decoder->segment_code = NULL_ARG;
@@ -818,6 +819,34 @@ void store_rm(CPUx86 *cpu, int size, uint32_t value) {
 
   return;
 }
+
+bool check_eflags_with_cc(CPUx86 *cpu, uint8_t cc) {
+  bool neg_flag = cc & 0b0001;
+  uint8_t code = cc & 0b1110;
+  uint32_t eflags = cpu->eflags;
+
+  bool overflow_flag = eflags & EFLAGS_OVERFLOW_FLAG;
+  bool sign_flag =     eflags & EFLAGS_SIGN_FLAG;
+  bool zero_flag =     eflags & EFLAGS_ZERO_FLAG;
+  bool adjust_flag =   eflags & EFLAGS_ADJUST_FLAG;
+  bool parity_flag =   eflags & EFLAGS_PARITY_FLAG;
+  bool carry_flag =    eflags & EFLAGS_CARRY_FLAG;
+
+  bool test_flag = 0;
+  switch (code) {
+    case 0b0000: test_flag = overflow_flag; break; /* overflow */
+    case 0b0010: test_flag = carry_flag; break; /* below */
+    case 0b0100: test_flag = zero_flag; break; /* above or equal */
+    case 0b0110: test_flag = carry_flag | zero_flag; break; /* below or equal */
+    case 0b1000: test_flag = sign_flag; break; /* sign */
+    case 0b1010: test_flag = parity_flag; break; /* parity */
+    case 0b1100: test_flag = sign_flag ^ overflow_flag; break; /* less */
+    case 0b1110: test_flag = (sign_flag ^ overflow_flag) | zero_flag; break; /* less or equal */
+  }
+
+  return test_flag ^ neg_flag;
+}
+
 
 uint64_t get_physical_addr(CPUx86 *cpu, int segment_code, uint64_t effective_addr) {
   SegmentReg *segment = &(cpu->seg[segment_code]);

@@ -26,6 +26,15 @@ void x86_03_ADD_D(CPUx86 *cpu);
 void x86_04_ADD_B(CPUx86 *cpu);
 void x86_05_ADD_W(CPUx86 *cpu);
 void x86_05_ADD_D(CPUx86 *cpu);
+void x86_08_OR_B(CPUx86 *cpu);
+void x86_09_OR_D(CPUx86 *cpu);
+void x86_09_OR_W(CPUx86 *cpu);
+void x86_0A_OR_B(CPUx86 *cpu);
+void x86_0B_OR_D(CPUx86 *cpu);
+void x86_0B_OR_W(CPUx86 *cpu);
+void x86_0C_OR_B(CPUx86 *cpu);
+void x86_0D_OR_D(CPUx86 *cpu);
+void x86_0D_OR_W(CPUx86 *cpu);
 
 void x86_10_ADC_B(CPUx86 *cpu);
 void x86_11_ADC_W(CPUx86 *cpu);
@@ -36,7 +45,64 @@ void x86_13_ADC_D(CPUx86 *cpu);
 void x86_14_ADC_B(CPUx86 *cpu);
 void x86_15_ADC_W(CPUx86 *cpu);
 void x86_15_ADC_D(CPUx86 *cpu);
+void x86_18_SBB_B(CPUx86 *cpu);
+void x86_19_SBB_D(CPUx86 *cpu);
+void x86_19_SBB_W(CPUx86 *cpu);
+void x86_1A_SBB_B(CPUx86 *cpu);
+void x86_1B_SBB_D(CPUx86 *cpu);
+void x86_1B_SBB_W(CPUx86 *cpu);
+void x86_1C_SBB_B(CPUx86 *cpu);
+void x86_1D_SBB_D(CPUx86 *cpu);
+void x86_1D_SBB_W(CPUx86 *cpu);
 
+void x86_20_AND_B(CPUx86 *cpu);
+void x86_21_AND_D(CPUx86 *cpu);
+void x86_21_AND_W(CPUx86 *cpu);
+void x86_22_AND_B(CPUx86 *cpu);
+void x86_23_AND_D(CPUx86 *cpu);
+void x86_23_AND_W(CPUx86 *cpu);
+void x86_24_AND_B(CPUx86 *cpu);
+void x86_25_AND_D(CPUx86 *cpu);
+void x86_25_AND_W(CPUx86 *cpu);
+void x86_28_SUB_B(CPUx86 *cpu);
+void x86_29_SUB_D(CPUx86 *cpu);
+void x86_29_SUB_W(CPUx86 *cpu);
+void x86_2A_SUB_B(CPUx86 *cpu);
+void x86_2B_SUB_D(CPUx86 *cpu);
+void x86_2B_SUB_W(CPUx86 *cpu);
+void x86_2C_SUB_B(CPUx86 *cpu);
+void x86_2D_SUB_D(CPUx86 *cpu);
+void x86_2D_SUB_W(CPUx86 *cpu);
+
+void x86_30_XOR_B(CPUx86 *cpu);
+void x86_31_XOR_D(CPUx86 *cpu);
+void x86_31_XOR_W(CPUx86 *cpu);
+void x86_32_XOR_B(CPUx86 *cpu);
+void x86_33_XOR_D(CPUx86 *cpu);
+void x86_33_XOR_W(CPUx86 *cpu);
+void x86_34_XOR_B(CPUx86 *cpu);
+void x86_35_XOR_D(CPUx86 *cpu);
+void x86_35_XOR_W(CPUx86 *cpu);
+void x86_38_CMP_B(CPUx86 *cpu);
+void x86_39_CMP_D(CPUx86 *cpu);
+void x86_39_CMP_W(CPUx86 *cpu);
+void x86_3A_CMP_B(CPUx86 *cpu);
+void x86_3B_CMP_D(CPUx86 *cpu);
+void x86_3B_CMP_W(CPUx86 *cpu);
+void x86_3C_CMP_B(CPUx86 *cpu);
+void x86_3D_CMP_D(CPUx86 *cpu);
+void x86_3D_CMP_W(CPUx86 *cpu);
+
+void x86_40_INC_D(CPUx86 *cpu);
+void x86_40_INC_W(CPUx86 *cpu);
+void x86_48_DEC_D(CPUx86 *cpu);
+void x86_48_DEC_W(CPUx86 *cpu);
+
+void x86_70_JMPCC_REL8(CPUx86 *cpu);
+
+void x86_84_TEST_B(CPUx86 *cpu);
+void x86_85_TEST_W(CPUx86 *cpu);
+void x86_85_TEST_D(CPUx86 *cpu);
 void x86_86_XCHG_B(CPUx86 *cpu);
 void x86_87_XCHG_W(CPUx86 *cpu);
 void x86_87_XCHG_D(CPUx86 *cpu);
@@ -50,6 +116,10 @@ void x86_8B_MOV_D(CPUx86 *cpu);
 void x86_90_XCHG_W(CPUx86 *cpu);
 void x86_90_XCHG_D(CPUx86 *cpu);
 
+void x86_A8_TEST_B(CPUx86 *cpu);
+void x86_A9_TEST_W(CPUx86 *cpu);
+void x86_A9_TEST_D(CPUx86 *cpu);
+
 void x86_B0_MOV_B(CPUx86 *cpu);
 void x86_B8_MOV_W(CPUx86 *cpu);
 void x86_B8_MOV_D(CPUx86 *cpu);
@@ -57,3 +127,7 @@ void x86_B8_MOV_D(CPUx86 *cpu);
 void x86_E9_NEAR_JMP_REL16(CPUx86 *cpu);
 void x86_E9_NEAR_JMP_REL32(CPUx86 *cpu);
 void x86_EB_SHORT_JMP_REL8(CPUx86 *cpu);
+
+void x86_FF_NEAR_JMP_D(CPUx86 *cpu);
+void x86_FF_NEAR_JMP_W(CPUx86 *cpu);
+

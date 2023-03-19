@@ -1,10 +1,7 @@
 [bits 16]
+[org 0xf000:0xfff0]
 
-
-mov eax, 0xffff0002
-mov cx, ax
-
-inf_loop:
-adc ch, cl
-jmp inf_loop
+mov eax, 0x12345678
+xor eax, eax
+jmp eax
 

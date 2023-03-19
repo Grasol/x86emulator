@@ -372,6 +372,8 @@ uint32_t decode_logical_addr(CPUx86 *cpu, int *segment);
 uint32_t load_rm(CPUx86 *cpu, int size);
 void store_rm(CPUx86 *cpu, int size, uint32_t value);
 
+bool check_eflags_with_cc(CPUx86 *cpu, uint8_t cc);
+
 uint64_t get_physical_addr(CPUx86 *cpu, int segment, uint64_t effective_addr);
 
 uint8_t  load_byte(CPUx86 *cpu, int segment, uint64_t effective_addr);
