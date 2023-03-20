@@ -1,0 +1,6 @@
+memory_size auto
+
+map
+0x000f0000 auto hello.bin
+0x000ffff0 auto t1.bin
+end

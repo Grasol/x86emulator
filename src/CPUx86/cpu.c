@@ -38,7 +38,7 @@ CPUx86 *new_CPUx86() {
   return cpu;
 
   memory_error:
-  fprintf(stderr, "%Memory error\n");
+  fprintf(stderr, "Memory error\n");
   exit(1);
 
 }
@@ -770,6 +770,7 @@ uint32_t load_rm(CPUx86 *cpu, int size) {
     int segment_code;
     uint32_t effective_addr = decode_logical_addr(cpu, &segment_code);    
     uint64_t data_phy_addr = get_physical_addr(cpu, segment_code, effective_addr);
+    printf("EA: %i %x %x", segment_code, effective_addr, data_phy_addr);
 
     switch (size) {
       case BYTE: {
