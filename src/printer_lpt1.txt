@@ -1,7 +1,2 @@
-HHeelllloo,,  WWoorrlldd!!
-
-HHeelllloo,,  WWoorrlldd!!
-
-HHeelllloo,,  WWoorrlldd!!
-
+Hello, World!
 Hello, World!

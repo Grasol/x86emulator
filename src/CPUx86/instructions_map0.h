@@ -100,6 +100,47 @@ void x86_48_DEC_W(CPUx86 *cpu);
 
 void x86_70_JMPCC_REL8(CPUx86 *cpu);
 
+void x86_80_ADD_B(CPUx86 *cpu);
+void x86_81_ADD_W(CPUx86 *cpu);
+void x86_81_ADD_D(CPUx86 *cpu);
+void x86_83_ADD_W(CPUx86 *cpu);
+void x86_83_ADD_D(CPUx86 *cpu);
+void x86_80_OR_B(CPUx86 *cpu);
+void x86_81_OR_W(CPUx86 *cpu);
+void x86_81_OR_D(CPUx86 *cpu);
+void x86_83_OR_W(CPUx86 *cpu);
+void x86_83_OR_D(CPUx86 *cpu);
+void x86_80_ADC_B(CPUx86 *cpu);
+void x86_81_ADC_W(CPUx86 *cpu);
+void x86_81_ADC_D(CPUx86 *cpu);
+void x86_83_ADC_W(CPUx86 *cpu);
+void x86_83_ADC_D(CPUx86 *cpu);
+void x86_80_SBB_B(CPUx86 *cpu);
+void x86_81_SBB_W(CPUx86 *cpu);
+void x86_81_SBB_D(CPUx86 *cpu);
+void x86_83_SBB_W(CPUx86 *cpu);
+void x86_83_SBB_D(CPUx86 *cpu);
+void x86_80_AND_B(CPUx86 *cpu);
+void x86_81_AND_W(CPUx86 *cpu);
+void x86_81_AND_D(CPUx86 *cpu);
+void x86_83_AND_W(CPUx86 *cpu);
+void x86_83_AND_D(CPUx86 *cpu);
+void x86_80_SUB_B(CPUx86 *cpu);
+void x86_81_SUB_W(CPUx86 *cpu);
+void x86_81_SUB_D(CPUx86 *cpu);
+void x86_83_SUB_W(CPUx86 *cpu);
+void x86_83_SUB_D(CPUx86 *cpu);
+void x86_80_XOR_B(CPUx86 *cpu);
+void x86_81_XOR_W(CPUx86 *cpu);
+void x86_81_XOR_D(CPUx86 *cpu);
+void x86_83_XOR_W(CPUx86 *cpu);
+void x86_83_XOR_D(CPUx86 *cpu);
+void x86_80_CMP_B(CPUx86 *cpu);
+void x86_81_CMP_W(CPUx86 *cpu);
+void x86_81_CMP_D(CPUx86 *cpu);
+void x86_83_CMP_W(CPUx86 *cpu);
+void x86_83_CMP_D(CPUx86 *cpu);
+
 void x86_84_TEST_B(CPUx86 *cpu);
 void x86_85_TEST_W(CPUx86 *cpu);
 void x86_85_TEST_D(CPUx86 *cpu);
@@ -124,10 +165,23 @@ void x86_B0_MOV_B(CPUx86 *cpu);
 void x86_B8_MOV_W(CPUx86 *cpu);
 void x86_B8_MOV_D(CPUx86 *cpu);
 
+void x86_C6_MOV_B(CPUx86 *cpu);
+void x86_C7_MOV_W(CPUx86 *cpu);
+void x86_C7_MOV_D(CPUx86 *cpu);
+
 void x86_E9_NEAR_JMP_REL16(CPUx86 *cpu);
 void x86_E9_NEAR_JMP_REL32(CPUx86 *cpu);
 void x86_EB_SHORT_JMP_REL8(CPUx86 *cpu);
 
+void x86_F6_TEST_B(CPUx86 *cpu);
+void x86_F7_TEST_W(CPUx86 *cpu);
+void x86_F7_TEST_D(CPUx86 *cpu);
+void x86_FE_INC_B(CPUx86 *cpu);
+void x86_FE_DEC_B(CPUx86 *cpu);
+void x86_FF_INC_W(CPUx86 *cpu);
+void x86_FF_INC_D(CPUx86 *cpu);
+void x86_FF_DEC_W(CPUx86 *cpu);
+void x86_FF_DEC_D(CPUx86 *cpu);
 void x86_FF_NEAR_JMP_D(CPUx86 *cpu);
 void x86_FF_NEAR_JMP_W(CPUx86 *cpu);
 
