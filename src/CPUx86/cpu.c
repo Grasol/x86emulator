@@ -3,7 +3,7 @@
 #include "segmentation.h"
 #include "paging.h"
 
-CPUx86 *new_CPUx86() {
+CPUx86 *CPUx86_init() {
   CPUx86 *cpu = malloc(sizeof(CPUx86));
   if (!cpu) {
     goto memory_error;

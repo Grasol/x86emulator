@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   //puts("1");
   Emulator emulator = {0};
 
-  emulator.cpu = new_CPUx86();
+  emulator.cpu = CPUx86_init();
   //puts("11");
   reset_cpu(emulator.cpu);
 
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
   char printer_name[] = LPT1_PRINTER_NAME;
   emulator.printer = printer_init(&printer_name, LPT1_ADDR, PRINTER_DEFAULT_SIZE_LINE, 
-    PRINTER_EMULATOR_WRITE_TIMEOUT, PRINTER_EMULATOR_BUSY_TIME);
+    PRINTER_EMULATOR_WRITE_TIMEOUT, PRINTER_EMULATOR_BUSY_STATE);
   emulator.printer->phy_mem = emulator.phy_mem;
 
   printf("GDTR.limit:%x\nCR0:%x\nEAX:%x\nXMM:%x\nCS.base:%x\nEIP:%x\n%c\n", 

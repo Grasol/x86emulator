@@ -16,6 +16,18 @@ void call_instruction_map0(CPUx86 *cpu);
 uint32_t generate_flags_add_byte(uint16_t src1, uint16_t src2, uint16_t res);
 uint32_t generate_flags_add_word(uint32_t src1, uint32_t src2, uint32_t res);
 uint32_t generate_flags_add_dword(uint64_t src1, uint64_t src2, uint64_t res);
+uint32_t generate_flags_sub_byte(uint16_t src1, uint16_t src2, uint16_t res);
+uint32_t generate_flags_sub_word(uint32_t src1, uint32_t src2, uint32_t res);
+uint32_t generate_flags_sub_dword(uint64_t src1, uint64_t src2, uint64_t res);
+uint32_t generate_flags_bitlogic_byte(uint8_t res);
+uint32_t generate_flags_bitlogic_word(uint16_t res);
+uint32_t generate_flags_bitlogic_dword(uint32_t res);
+uint32_t generate_flags_inc_byte(uint8_t src1, uint8_t res);
+uint32_t generate_flags_inc_word(uint16_t src1, uint16_t res);
+uint32_t generate_flags_inc_dword(uint32_t src1, uint32_t res);
+uint32_t generate_flags_dec_byte(uint8_t src1, uint8_t res);
+uint32_t generate_flags_dec_word(uint16_t src1, uint16_t res);
+uint32_t generate_flags_dec_dword(uint32_t src1, uint32_t res);
 
 void x86_00_ADD_B(CPUx86 *cpu);
 void x86_01_ADD_W(CPUx86 *cpu);

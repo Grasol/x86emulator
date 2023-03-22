@@ -343,10 +343,9 @@ cpu->eflags |= (v & f) | 0x2;
 #define CR4_PROTECTED_MODE_VIRTUAL_INTERRUPTS     0x00000002
 #define CR4_VIRTUAL_8086_MODE_EXTENSIONS          0x00000001
 
-CPUx86 *new_CPUx86();
+CPUx86 *CPUx86_init();
 void reset_cpu(CPUx86 *cpu);
-void run_cpu(CPUx86 *cpu);
-
+void cpu_update(CPUx86 *cpu);
 
 #define FILE_NAME "instr_list.bin"
 #define NULL_ARG 255
