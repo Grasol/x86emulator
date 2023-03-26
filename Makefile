@@ -1,5 +1,5 @@
 all:
-	gcc -O3 -Wall -Wextra -march=native -o emu.exe \
+	gcc -O3 -Wall -Wextra -march=native -o emu.exe -D_POSIX_C_SOURCE -D_GNU_SOURCE \
  		-I./src/ \
  		-I./src/Memory \
  		-I./src/PrinterLPT \

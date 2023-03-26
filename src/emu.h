@@ -38,16 +38,26 @@ struct Switch_option {
 typedef struct Switch_option argswitch_t;
 
 
+argp_option parse_switch(char *value);
+int parse_value(Argp *argp, char *value, argp_option option);
+void parse_argument(int argc, char **argv, Argp *argp);
+void print_help();
+
 
 
 struct EmulatorState {
   CPUx86 *cpu;
   PhyMem *phy_mem;
   Printer *printer;
+
+  bool debug_mode;
+  bool quit;
 };
 typedef struct EmulatorState Emulator;
 
+#define DEBUG_LINE_SIZE 64
 
+void enter_debug_mode(Emulator *emulator);
 
 
 

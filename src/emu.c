@@ -113,8 +113,13 @@ void parse_argument(int argc, char **argv, Argp *argp) {
     }
   }
 
-  if ((option == HELP) || (state == VALUE)) {
-    puts("Z");
+  if (state == VALUE) {
+    if (parse_value(argp, argv[i], option) != 0) {
+      argp->help = true;
+    }
+  }
+
+  if (option == HELP) {
     argp->help = true;
   }
   
@@ -139,6 +144,20 @@ void print_help() {
   return;
 }
 
+void enter_debug_mode(Emulator *emulator) {
+  char line[DEBUG_LINE_SIZE];
+  size_t line_sz = DEBUG_LINE_SIZE;
+
+  fgets(line, line_sz, stdin);
+  size_t ch_count = strlen(line);
+
+  printf("EIP: %x, EAX: %x, ECX: %x, EDX: %x, EBX: %x, ESP: %x, EBP: %x, ESI: %x, EDI: %x, EFLAGS: %x\n", 
+    emulator->cpu->eip, emulator->cpu->gpr[EAX], emulator->cpu->gpr[ECX], emulator->cpu->gpr[EDX], emulator->cpu->gpr[EBX], 
+    emulator->cpu->gpr[ESP], emulator->cpu->gpr[EBP], emulator->cpu->gpr[ESI], emulator->cpu->gpr[EDI], emulator->cpu->eflags);
+  printf("DP: %x, SP: %x, CP: %x\n", emulator->printer->data_port, emulator->printer->status_port, emulator->printer->control_port);
+
+  return;
+}
 
 int main(int argc, char **argv) {
   Argp argp = {0};  
@@ -190,19 +209,17 @@ int main(int argc, char **argv) {
     PRINTER_EMULATOR_WRITE_TIMEOUT, PRINTER_EMULATOR_BUSY_STATE);
   emulator.printer->phy_mem = emulator.phy_mem;
 
-  printf("GDTR.limit:%x\nCR0:%x\nEAX:%x\nXMM:%x\nCS.base:%x\nEIP:%x\n%c\n", 
-    emulator.cpu->gdtr->limit, emulator.cpu->creg[CR0], emulator.cpu->gpr[EAX], 
-    emulator.cpu->xmm[0].part[0], emulator.cpu->seg[CS].base_address, emulator.cpu->eip, PHYMEM_le_load_byte(emulator.phy_mem, 0xf0040));
-
-  printf("%hx\n", PHYMEM_le_load_word(emulator.phy_mem, 0));
-
+  emulator.debug_mode = argp.debug_mode;
+  emulator.quit = false;
   while (true) {
     cpu_update(emulator.cpu);
     printer_update(emulator.printer);
-    printf("EIP: %x, EAX: %x, ECX: %x, EDX: %x, EBX: %x, ESP: %x, EBP: %x, ESI: %x, EDI: %x, EFLAGS: %x\n", emulator.cpu->eip, emulator.cpu->gpr[EAX], emulator.cpu->gpr[ECX], emulator.cpu->gpr[EDX], emulator.cpu->gpr[EBX], 
-      emulator.cpu->gpr[ESP], emulator.cpu->gpr[EBP], emulator.cpu->gpr[ESI], emulator.cpu->gpr[EDI], emulator.cpu->eflags);
-    printf("DP: %x, SP: %x, CP: %x\n", emulator.printer->data_port, emulator.printer->status_port, emulator.printer->control_port);
-    getchar();
+
+    if (emulator.debug_mode) {
+      enter_debug_mode(&emulator);
+    }
+
+
   }
 
 
