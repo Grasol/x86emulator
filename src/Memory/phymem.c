@@ -2,7 +2,7 @@
 
 
 
-PhyMem* PhysicalMemoryInit(size_t max, uint8_t *data, size_t data_size) {
+PhyMem* PHYMEM_init(size_t max, uint8_t *data, size_t data_size) {
   PhyMem *phy_mem = malloc(sizeof(PhyMem));
   if (phy_mem == NULL) {
     goto mem_error;

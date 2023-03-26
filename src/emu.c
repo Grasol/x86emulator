@@ -1,47 +1,188 @@
 #include "emu.h"
 
+argswitch_t switches[ARGP_OPTIONS] = {
+    {"--help", "-h", NULL, "show help text and exit", HELP},
+    {"--memory_size", "-m", "size", "set maximum size of memory (in MiB)", MEMORY_SIZE},
+    {"--memory_dump", "-d", "file", "load binary file to memory", MEMORY_DUMP},
+    {"--breakpoint", "-b", "address", "set breakpoint on address", BREAKPOINT_ADDR},
+    {"--debug", "-D", NULL, "run emulator in debug mode", DEBUG_MODE}, 
+    {"--xchg-breakpoint", "-X", NULL, "xchg ebx, ebx instruction (opcode: 87 DB) switch emulator to debug mode", XCHG_BREAKPOINT}
+};
+
+
+argp_option parse_switch(char *value) {
+  if (value[0] != '-') {
+    return -1;
+  }
+
+  argp_option option = HELP;
+  for (int i = 0; i < ARGP_OPTIONS; ++i) {
+    bool pared = false;
+    if (strcmp(value, switches[i].long_name) == 0) {
+      pared = true;
+    }
+    else if (switches[i].short_name != NULL) {
+      if (strcmp(value, switches[i].short_name) == 0) {
+        pared = true;
+      }
+    }
+
+    if (pared) {
+      option = switches[i].option;
+      break;
+    }
+  }
+
+  return option;
+}
+
+int parse_value(Argp *argp, char *value, argp_option option) {
+  int res_arg = 0;
+  switch (option) {
+    case HELP: {
+      argp->help = true;
+      break;
+    }
+    case MEMORY_SIZE: {
+      argp->memory_size = atoi(value);
+      res_arg = 1;
+      break;
+    } 
+    case MEMORY_DUMP: {
+      argp->memory_dump = value;
+      res_arg = 1;
+      break;
+    } 
+    case BREAKPOINT_ADDR: {
+      if (sscanf(value, "%llx", &(argp->breakpoint_addr)) != 1) {
+        argp->help = true;
+      }
+      else {
+        res_arg = 1;
+      }
+
+      break;
+    } 
+    case DEBUG_MODE: {
+      argp->debug_mode = true;
+      break;
+    }
+    case XCHG_BREAKPOINT: {
+      argp->xchg_breakpoint = true;
+      break;
+    } 
+    default: {
+      if (value[0] == '-') {
+        argp->help = true;
+      }
+    }
+  }
+
+  return res_arg;
+}
+
+void parse_argument(int argc, char **argv, Argp *argp) {  
+  enum parser_state {
+    SWITCH_PARSE,
+    VALUE
+  } state = SWITCH_PARSE;
+
+  int i = 0;
+  argp_option option = HELP; 
+  while (i < argc) {
+    switch (state) {
+      case SWITCH_PARSE: {
+        option = parse_switch(argv[i]);
+        ++i;
+        if (option == -1) {
+          continue;
+        }
+
+        state = VALUE;
+        break;
+      }
+      case VALUE: {
+        i += parse_value(argp, argv[i], option);
+        state = SWITCH_PARSE;
+        break;
+      }
+    }
+
+    if (argp->help) {
+      break;
+    }
+  }
+
+  if ((option == HELP) || (state == VALUE)) {
+    puts("Z");
+    argp->help = true;
+  }
+  
+  return;
+}
+
+void print_help() {
+  puts("x86 emulator by Grasol");
+  for (int i = 0; i < ARGP_OPTIONS; ++i) {
+    int ch = printf(" %s %s", switches[i].short_name, switches[i].long_name);
+    if (switches[i].values) {
+      ch += printf(" %s", switches[i].values);
+    }
+    
+    char ws[32] = {0};
+    memset(ws, ' ', 32 - ch);
+    printf("%s", ws);
+    
+    printf(" : %s\n", switches[i].description);
+  }
+
+  return;
+}
+
 
 int main(int argc, char **argv) {
-  if (argc != 3) {
-    puts("usage: emu <memory size in MB (step 16MB)> <bulid memory>");
-    exit(0);
-  }
+  Argp argp = {0};  
+  Emulator emulator = {0};
+  
+  parse_argument(argc, argv, &argp);
 
-  size_t memory_size = atoll(argv[1]);
-  if (memory_size >= 4096) {
-    memory_size = 4096;
+  if (argp.help) {
+    print_help();
+    exit(0);
+  }  
+
+  if (argp.memory_size >= 4096) {
+    argp.memory_size = 4096;
   }
   else {
-    memory_size = ((memory_size + 15) / 16) << 24;
+    argp.memory_size = ((argp.memory_size + 15) / 16) << 24; // aligment to 16MB blocks
   }
 
-  if (memory_size == 0) {
-    return 0;
+  if (argp.memory_size == 0) {
+    argp.memory_size = 16;
   }
 
-  char *bulid_memory_file = argv[2];
-  size_t bulid_memory_sz;
+  if (argp.memory_dump) { 
+    size_t memory_dump_sz;
+    FILE* f = open_file(argp.memory_dump, "rb", &memory_dump_sz);
+    uint8_t *memory_dump_data = malloc(memory_dump_sz);
+    if (memory_dump_data == NULL) {
+      exit(1);
+    }
 
-  FILE* f = open_file(bulid_memory_file, "rb", &bulid_memory_sz);
-  uint8_t *bulid_memory_data = malloc(bulid_memory_sz);
-  if (bulid_memory_data == NULL) {
-    exit(1);
+    fread(memory_dump_data, 1, memory_dump_sz, f);
+    fclose(f);
+
+    memory_dump_sz = ((uint64_t*)memory_dump_data)[0];
+    emulator.phy_mem = PHYMEM_init(argp.memory_size, memory_dump_data + 8, memory_dump_sz);
+    free(memory_dump_data);
   }
-
-  fread(bulid_memory_data, 1, bulid_memory_sz, f);
-  fclose(f);
-  bulid_memory_sz = ((uint64_t*)bulid_memory_data)[0];
-
-  //puts("1");
-  Emulator emulator = {0};
+  else {
+    emulator.phy_mem = PHYMEM_init(argp.memory_size, NULL, 0);
+  }
 
   emulator.cpu = CPUx86_init();
-  //puts("11");
   reset_cpu(emulator.cpu);
-
-  //puts("2");
-  emulator.phy_mem = PhysicalMemoryInit(memory_size, bulid_memory_data + 8, bulid_memory_sz);
-  free(bulid_memory_data);
   emulator.cpu->phy_mem = emulator.phy_mem;
 
   char printer_name[] = LPT1_PRINTER_NAME;

@@ -13,7 +13,7 @@ struct PhysicalMemory {
 };
 typedef struct PhysicalMemory PhyMem;
 
-PhyMem* PhysicalMemoryInit(size_t max, uint8_t *data, size_t data_size);
+PhyMem* PHYMEM_init(size_t max, uint8_t *data, size_t data_size);
 void PHYMEM_allocation_check(PhyMem *phy_mem, uint64_t physical_addr);
 
 uint8_t  PHYMEM_le_load_byte(PhyMem *phy_mem, uint64_t physical_addr);
