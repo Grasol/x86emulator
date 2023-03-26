@@ -14,7 +14,6 @@
 
 #define PRINTER_DEFAULT_SIZE_LINE 80
 #define PRINTER_EMULATOR_WRITE_TIMEOUT 5000.0
-//#define PRINTER_EMULATOR_BUSY_TIME 1000.0
 #define PRINTER_EMULATOR_BUSY_STATE 5
 
 struct Printer {
@@ -30,17 +29,13 @@ struct Printer {
   size_t line_fill;
   size_t line_cursor;
   double emulator_write_timer;
-  //double emulator_write_timeout;
   double emulator_write_default_timeout;
-  //double emulator_busy_time;
   int emulator_busy_check;
   int emulator_busy_default_no;
 
   uint8_t data_port;
   uint8_t status_port;
   uint8_t control_port;
-
-  //bool temporary_off_strobe;
 };
 typedef struct Printer Printer;
 
