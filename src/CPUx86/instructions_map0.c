@@ -1,3 +1,20 @@
+/*
+ * This file is part of x86emulator-by-Grasol
+ *
+ * x86emulator-by-Grasol is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * x86emulator-by-Grasol is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with x86emulator-by-Grasol.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "instructions_map0.h"
 
 uint32_t PARITY_TAB[8] = {
@@ -74,7 +91,7 @@ void call_instruction_map0(CPUx86 *cpu) {
 
     case 0x70: x86_70_JMPCC_REL8(cpu); break;
 
-    case 0x82: /* opcode 0x82 is identical to 0x80 */
+    case 0x82: /* opcode 0x82 is same as 0x80 */
     case 0x80: {
       switch (decoder->nnn) {
         case 0: x86_80_ADD_B(cpu); break;
